@@ -1,0 +1,153 @@
+# Needed Libraries for Analysis #
+library(gdata)
+library(dplyr)
+library(stringr)
+library(forecast)
+library(fma)
+library(tseries)
+library(expsmooth)
+library(lmtest)
+library(zoo)
+library(ggplot2)
+
+setwd("C:\\Users\\Andy Dotter\\Documents\\Fall_2018\\Fall_1\\Time Series_Forecasting\\Homework")
+
+# Import csv and modify
+well_data<-read.csv("G-2866_T.csv")%>%
+    rename(date=ï..date)%>%
+    mutate(date = as.character(date))%>%
+    select(-Well_ft, -Code)%>%
+    group_by(time)%>%
+    mutate(new_time=as.character(time),
+           hour=str_split(new_time,":")[[1]][1],
+           minute=str_split(new_time,":")[[1]][2])%>%
+    ungroup(time)%>%
+    group_by(date)%>%
+    mutate(month=str_split(date,"/")[[1]][1],
+           day=str_split(date,"/")[[1]][2],
+           year=str_split(date,"/")[[1]][3])%>%
+    ungroup(date)%>%
+    mutate(minute=as.integer(minute),hour=as.integer(hour),day=as.integer(day),
+           month=as.integer(month),year=as.integer(year))%>%
+    filter(!(year==2018&month==6&day>8)&
+               !(year==2018&month==6&day==8&hour>10)&
+               !(year==2018&month==6&day==8&hour==9&minute>30))%>%
+    arrange(year,month,day,hour)%>%
+    group_by(year,month,day, hour, tz_cd)%>%
+    summarise(Corrected_mean=mean(Corrected))%>%
+    ungroup(year,month,day,hour)
+
+# Create new dataframe from csv data summarized by month
+new_well_data<-well_data%>%
+    group_by(year,month)%>%
+    summarize(month_mean=mean(Corrected_mean),
+              numb=n())%>%
+    arrange(year,month)
+
+# View the dataframe
+View(new_well_data)
+
+##----------------###
+
+
+
+
+# Creating Time Series Data Objects #
+Well_Readings <- ts(new_well_data$month_mean, start = 2007.75, frequency = 12)
+
+# perform decomposition of monthly data to explore
+decomp_stl <- stl(Well_Readings, s.window = (7))
+plot(decomp_stl)
+
+# Since R saves decomp_stl as object, can subset it, this code just plots the trend.
+# This graph is just Yt = Tt (only the trend done by smoothing)
+plot(Well_Readings, col = "grey", main = "Well Water Level - Trend/Cycle", xlab = "Month-Year", ylab = "Water Depth (feet)", lwd = 2)
+lines(decomp_stl$time.series[,2], col = "red", lwd = 2)
+
+# Here we are going to plot the seasonality, overlaying it with a seasonally adjusted data (series - seasonality adjustement (Yt - St))
+# Basically subtract out seasonality component.
+# Red line is seasonaly adjusted dataset, grey is the actual values (Just subtracting seasonality)
+# To model seasonality must also include error term i.e. Yt - St = T + e. More variation in this graph b/c of error term.
+seas_pass=Well_Readings-decomp_stl$time.series[,1]
+plot(Well_Readings, col = "grey", main = "Well Water Level - Seasonally Adjusted", xlab = "Month-Year", ylab = "Water Depth (feet)", lwd = 2)
+lines(seas_pass, col = "blue", lwd = 2)
+
+# Need to perform classic decomposition vs. STL decomposition
+#classic_decomp addative
+Classic_Add_Decomp <- decompose(Well_Readings,type="additive")
+autoplot(Classic_Add_Decomp) + xlab("Year") + ggtitle("Classic Additive Decomposition of Well Water Level")
+
+# Classic Decomp Multiplicative
+Classic_Multi_Decomp <- decompose(Well_Readings,type="multiplicative")
+autoplot(Classic_Multi_Decomp) + xlab("Year") + ggtitle("Classic Multiplicative Decomposition of Well Water Level")
+
+
+# Build a holdout dataset
+Ending <- nrow(new_well_data) - 6
+Well_Training_A= new_well_data[1:Ending,]
+Well_Validation_A= new_well_data[(Ending+1):nrow(new_well_data),]
+nrow(new_well_data)
+nrow(Well_Training)
+nrow(Well_Validation)
+
+Well_Training <- ts(Well_Training_A$month_mean, start = 2007.75, frequency = 12)
+Well_Validation <- ts(Well_Validation_A$month_mean, start = 2007.75, frequency = 12)
+# Building a Single Exponential Smoothing Model 
+# There is a simple and optimal for first predicted value. h is how far to predict out.
+# For practice Model will not be great
+SES.Well_Training <- ses(Well_Training, initial = "optimal", h = 6)
+summary(SES.Well_Training)
+
+plot(SES.Well_Training, main = "Well Depth with Simple ESM Forecast", xlab = "Date", ylab = "Water Depth (feet)")
+abline(v = 2007.75, col = "red", lty = "dashed")
+round(accuracy(SES.Well_Training),2)
+
+#autoplot(SESWell_Readings)+
+    #autolayer(fitted(SES.Well_Readings),series="Fitted")+ylab("US Steel Shipments with Simple ESM Forecast")
+
+# Building a Linear Exponential Smoothing Model - Well Data #
+#This is Holts#
+LES.Well_Training <- holt(Well_Training, initial = "optimal", h = 6)
+summary(LES.Well_Training)
+
+plot(LES.Well_Training, main = "Well Water Level holt (linear) ESM Forecast", xlab = "Date", ylab = "Water Level (feet)")
+abline(v = 2007.75, col = "red", lty = "dashed")
+
+#autoplot(LESWell_Readings)+
+ #   autolayer(fitted(LESWell_Readings),series="Fitted")+ylab("US Steel Shipments with Holt ESM Forecast")
+
+# This is a damped trend#
+LDES.Well_Training <- holt(Well_Training, initial = "optimal", h = 6, damped = TRUE)
+summary(LDES.Well_Training)
+
+plot(LDES.Well_Training, main = "Well Water Level holt (linear) Damped ESM Forecast", xlab = "Date", ylab = "Water Level (feet)")
+abline(v = 2007.75, col = "red", lty = "dashed")
+
+
+# Building a Holt-Winters ESM - Well Data #
+# If you are going to do seasonal models, you have to put a trend component on it no matter what, so in R skipped right ahead to Holt-Winters#
+#Only have trend seasonality multiplicative and trend seasonality additive#
+# Be careful, if you dont put h = 24 it will do something, but best to explicitly state it # 
+HWES.Well_Training_Add <- hw(Well_Training, seasonal = "additive", h = 6)
+summary(HWES.Well_Training_Add)
+
+plot(HWES.Well_Training_Add, main = "Well Water Level Holt-Winters addative ESM Forecast", xlab = "Date", ylab = "Water Level (feet)")
+abline(v = 2007.75, col = "red", lty = "dashed")
+
+# Multiplicative, Also h = is the number of seasons to forecast# 
+HWES.Well_Training_Multi <- hw(Well_Training, seasonal = "multiplicative", h = 6)
+summary(HWES.Well_Training_Multi)
+
+plot(HWES.Well_Training_Multi, main = "Well Water Level Holt-Winters multiplicative ESM Forecast", xlab = "Date", ylab = "Water Level (feet)")
+abline(v = 2007.75, col = "red", lty = "dashed")
+
+#####Using a holdout data set
+# Test will depend on best model fit
+# looks like best model is holt-winters with additive seasonality. AIC = Lower, MAPE = Lower, RMSE = Lower
+Final_Model <- hw(Well_Validation, seasonal = "additive",initial='optimal')
+test.results=forecast(Final_Model_Here,h=6)
+
+# Will need to evaluate MAPE of best model
+error=test-test.results$mean
+MAE=mean(abs(error))
+MAPE=mean(abs(error)/abs(test))
