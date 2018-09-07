@@ -128,6 +128,24 @@ legend(x = "topleft", legend = c("Predicted", "Test Data"), col = c("blue", "red
 
 #creating plots for the report: 
 
+#Single exponential smoothing plot
+plot(SES.well,
+     main = "Well Water Depth with Multiplicative Holt-Winters ESM Forecast",
+     xlab = "Date", ylab = "Well Water Depth (Feet)",
+     ylim=c(-10, 25))
+abline(v = 2007+9/12, col = "red", lty = "dashed")
+abline(v = 2018+5/12, col = "red", lty = "dashed")
+abline(v = 2018+6/12, col = "red", lty = "dashed")
+
+#linear ESM plot
+plot(LES.well,
+     main = "Well Water Depth with Multiplicative Holt-Winters ESM Forecast",
+     xlab = "Date", ylab = "Well Water Depth (Feet)",
+     ylim=c(-10, 25))
+abline(v = 2007+9/12, col = "red", lty = "dashed")
+abline(v = 2018+5/12, col = "red", lty = "dashed")
+abline(v = 2018+6/12, col = "red", lty = "dashed")
+
 #additive holt winters plot
 plot(HWES.add,
      main = "Well Water Depth with Additive Holt-Winters ESM Forecast",
@@ -145,6 +163,9 @@ plot(HWES.mult,
 abline(v = 2007+9/12, col = "red", lty = "dashed")
 abline(v = 2018+5/12, col = "red", lty = "dashed")
 abline(v = 2018+6/12, col = "red", lty = "dashed")
+
+
+
 
 
 
