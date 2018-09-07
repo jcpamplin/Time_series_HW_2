@@ -7,7 +7,7 @@ library(stringr)
 library(ggplot2)
 
 well_data<-read.csv("G-2866_T.csv")%>%
-  rename(date=ï..date)%>%
+  rename(date=Ã¯..date)%>%
   mutate(date = as.character(date))%>%
   select(-Well_ft, -Code)%>%
   group_by(time)%>%
@@ -124,6 +124,27 @@ MAE4=mean(abs(error4))
 plot(test.results, xlab = "Year", ylab = "Water Level (feet)")
 lines(well1, main = "Well Water Level Holt-Winters multiplicative ESM Forecast", col = "red")
 legend(x = "topleft", legend = c("Predicted", "Test Data"), col = c("blue", "red"), lty = c(1, 1))
+
+
+#creating plots for the report: 
+
+#additive holt winters plot
+plot(HWES.add,
+     main = "Well Water Depth with Additive Holt-Winters ESM Forecast",
+     xlab = "Date", ylab = "Well Water Depth (Feet)",
+     ylim=c(-10, 25))
+abline(v = 2007+9/12, col = "red", lty = "dashed")
+abline(v = 2018+5/12, col = "red", lty = "dashed")
+abline(v = 2018+6/12, col = "red", lty = "dashed")
+
+#multiplicative holt winters plot
+plot(HWES.mult,
+     main = "Well Water Depth with Multiplicative Holt-Winters ESM Forecast",
+     xlab = "Date", ylab = "Well Water Depth (Feet)",
+     ylim=c(-10, 25))
+abline(v = 2007+9/12, col = "red", lty = "dashed")
+abline(v = 2018+5/12, col = "red", lty = "dashed")
+abline(v = 2018+6/12, col = "red", lty = "dashed")
 
 
 
