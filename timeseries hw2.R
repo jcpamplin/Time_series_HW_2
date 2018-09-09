@@ -129,40 +129,26 @@ legend(x = "topleft", legend = c("Predicted", "Test Data"), col = c("blue", "red
 #creating plots for the report: 
 
 #Single exponential smoothing plot
-plot(SES.well,
-     main = "Well Water Depth with Single ESM Forecast",
-     xlab = "Date", ylab = "Well Water Depth (Feet)",
-     ylim=c(-10, 25))
-abline(v = 2007+9/12, col = "red", lty = "dashed")
-abline(v = 2018+5/12, col = "red", lty = "dashed")
-abline(v = 2018+6/12, col = "red", lty = "dashed")
+plot(SES.well, xlab = "Year", ylab = "Water Level (feet)", main = "Well Water Depth with Single ESM Forecast")
+lines(well1, col = "red")
+legend(x = "topleft", legend = c("Predicted", "Test Data"), col = c("blue", "red"), lty = c(1, 1))
 
 #linear ESM plot
-plot(LES.well,
-     main = "Well Water Depth with Linear ESM Forecast",
-     xlab = "Date", ylab = "Well Water Depth (Feet)",
-     ylim=c(-10, 25))
-abline(v = 2007+9/12, col = "red", lty = "dashed")
-abline(v = 2018+5/12, col = "red", lty = "dashed")
-abline(v = 2018+6/12, col = "red", lty = "dashed")
+plot(LES.well, xlab = "Year", ylab = "Water Level (feet)", main = "Well Water Depth with Linear ESM Forecast")
+lines(well1, col = "red")
+legend(x = "topleft", legend = c("Predicted", "Test Data"), col = c("blue", "red"), lty = c(1, 1))
 
 #additive holt winters plot
-plot(HWES.add,
-     main = "Well Water Depth with Additive Holt-Winters ESM Forecast",
-     xlab = "Date", ylab = "Well Water Depth (Feet)",
-     ylim=c(-10, 25))
-abline(v = 2007+9/12, col = "red", lty = "dashed")
-abline(v = 2018+5/12, col = "red", lty = "dashed")
-abline(v = 2018+6/12, col = "red", lty = "dashed")
+plot(HWES.add, xlab = "Year", ylab = "Water Level (feet)", main = "Well Water Depth with Additive Holt-Winters ESM Forecast")
+lines(well1, col = "red")
+legend(x = "topleft", legend = c("Predicted", "Test Data"), col = c("blue", "red"), lty = c(1, 1))
 
 #multiplicative holt winters plot
-plot(HWES.mult,
-     main = "Well Water Depth with Multiplicative Holt-Winters ESM Forecast",
-     xlab = "Date", ylab = "Well Water Depth (Feet)",
-     ylim=c(-10, 25))
-abline(v = 2007+9/12, col = "red", lty = "dashed")
-abline(v = 2018+5/12, col = "red", lty = "dashed")
-abline(v = 2018+6/12, col = "red", lty = "dashed")
+plot(HWES.mult, xlab = "Year", ylab = "Water Level (feet)", main = "Well Water Depth with Multiplicative Holt-Winters ESM Forecast")
+lines(well1, col = "red")
+legend(x = "topleft", legend = c("Predicted", "Test Data"), col = c("blue", "red"), lty = c(1, 1))
+
+
 
 
 
